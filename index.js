@@ -14,7 +14,7 @@ module.exports = function(dsn, opt) {
     opt = opt || {};
 
     var sentry = new raven.Client(dsn, opt);
-
+    var originalArgs = arguments;
     // we will ignore anything above this level
     var ignore_levels = opt.ignore_levels || 2;
 
@@ -51,8 +51,8 @@ module.exports = function(dsn, opt) {
             level: lvl
         };
 
-        for (var idx=0 ; idx < arguments.length ; ++idx) {
-            var arg = arguments[idx];
+        for (var idx=0 ; idx < originalArgs.length ; ++idx) {
+            var arg = originalArgs[idx];
 
             // http interface handling
             if (arg instanceof http.IncomingMessage) {
@@ -73,14 +73,7 @@ module.exports = function(dsn, opt) {
 
         // if the first argument is an error, capture it as the error interface
         if (arguments[0] instanceof Error) {
-            var err = arguments[0];
-
-            if (Object.keys(err).length > 0) {
-                extra.error = err;
-            }
-
-            // captures the error and stacktrace
-            return sentry.captureError(err, packet);
+            return sentry.captureError(arguments[0], packet);
         }
 
         // no error objects, just send the packet
